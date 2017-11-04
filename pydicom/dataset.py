@@ -582,7 +582,9 @@ class Dataset(dict):
         -------
         pydicom.dataelem.DataElement
         """
-        if not isinstance(tag, BaseTag):
+        if isinstance(key, BaseTag):
+            tag = key
+        else:
             tag = Tag(key)
         data_elem = dict.__getitem__(self, tag)
         # If a deferred read, return using __getitem__ to read and convert it
