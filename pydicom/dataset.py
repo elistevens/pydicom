@@ -1008,7 +1008,9 @@ class Dataset(dict):
         if stop is None:
             stop = all_tags[-1] + 1
 
-        slice_tags = [tag for tag in all_tags if Tag(start) <= tag < Tag(stop)]
+        start_tag = Tag(start)
+        stop_tag = Tag(stop)
+        slice_tags = [tag for tag in all_tags if start_tag <= tag < stop_tag]
         return slice_tags[::step]
 
     def __str__(self):
