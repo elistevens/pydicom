@@ -33,6 +33,8 @@ import pydicom  # for dcmwrite
 import pydicom.charset
 from pydicom.config import logger
 import pydicom.config
+from bisect import bisect_left
+from itertools import takewhile
 
 sys_is_little_endian = (sys.byteorder == 'little')
 
@@ -528,10 +530,8 @@ class Dataset(dict):
         # If passed a slice, return a Dataset containing the corresponding
         #   DataElements
         if isinstance(key, slice):
-            ds = Dataset()
-            for tag in self._slice_dataset(key.start, key.stop, key.step):
-                ds.add(self[tag])
-            return ds
+            tags = self._slice_dataset(key.start, key.stop, key.step)
+            return Dataset({tag: self[tag] for tag in tags})
 
         if isinstance(key, BaseTag):
             tag = key
@@ -992,26 +992,34 @@ class Dataset(dict):
             The tags in the Dataset that meet the conditions of the slice.
         """
         # Check the starting/stopping Tags are valid when used
-        if start and Tag(start):
-            pass
-        if stop and Tag(stop):
-            pass
+        if start is not None:
+            start = Tag(start)
+        if stop is not None:
+            stop = Tag(stop)
 
         all_tags = sorted(self.keys())
         # If the Dataset is empty, return an empty list
         if not all_tags:
             return []
-
-        # Ensure we have valid Tags when start/stop are None
+        
+        # special case the None cases as they will be common
         if start is None:
-            start = all_tags[0]
+            if stop is None:
+                if step == 1:
+                    return all_tags  # this way don't copy the list
+                return all_tags[::step]
+            else: # Have a stop value, get values until that point
+                if step == 1:
+                    return list(takewhile(lambda x: x < stop, all_tags))
+                return list(takewhile(lambda x: x < stop, all_tags))[::step]
+        
+        # Have a start value.  Find its index
+        istart = bisect_left(all_tags, start)
         if stop is None:
-            stop = all_tags[-1] + 1
-
-        start_tag = Tag(start)
-        stop_tag = Tag(stop)
-        slice_tags = [tag for tag in all_tags if start_tag <= tag < stop_tag]
-        return slice_tags[::step]
+            return all_tags[istart::step]
+        else:
+            istop = bisect_left(all_tags, stop)
+            return all_tags[istart:istop:step]
 
     def __str__(self):
         """Handle str(dataset)."""

@@ -128,8 +128,9 @@ if __name__ == "__main__":
         sys.settrace(trace_calls)
         one_ds.save_as(os.path.join(tempwrite, "Test_write.dcm"))
         from collections import Counter
-        print("Get", Counter(get_calls))
-        print("Set", Counter(set_calls))
+        print("'Get':", Counter(get_calls))
+        print()
+        print("'Set':", Counter(set_calls))
         sys.exit()
     do_trace = False   
     if do_trace:       
@@ -157,7 +158,9 @@ if __name__ == "__main__":
         print("---------------")
         print(testrun)
         print("---------------")
-        p.strip_dirs().sort_stats('time').print_stats(8)
+        p.strip_dirs().sort_stats('cumtime').print_stats(10)
+        print("-----------------------------------")
+        p.strip_dirs().sort_stats('time').print_stats(10)
 
 
         
