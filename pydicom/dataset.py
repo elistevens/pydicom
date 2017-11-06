@@ -475,7 +475,12 @@ class Dataset(dict):
             return super(Dataset, self).__getattribute__(name)
         else:
             return self[tag].value
-
+    
+    def has_groups(self, *args):
+        """Check if dataset has any tags in specified groups"""
+        groups = set(tag >> 16 for tag in self.keys())
+        return tuple(arg in groups for arg in args)
+        
     @property
     def _character_set(self):
         """The Dataset's SpecificCharacterSet value (if present)."""
@@ -554,15 +559,20 @@ class Dataset(dict):
             else:
                 character_set = default_encoding
             # Not converted from raw form read from file yet; do so now
-            self[tag] = DataElement_from_raw(data_elem, character_set)
+            raw_data_elem = data_elem
+            data_elem = DataElement_from_raw(data_elem, character_set)
 
             # If the Element has an ambiguous VR, try to correct it
-            if 'or' in self[tag].VR:
+            if 'or' in data_elem.VR:
                 from pydicom.filewriter import correct_ambiguous_vr_element
-                self[tag] = correct_ambiguous_vr_element(
-                    self[tag], self, data_elem[6])
-
-        return dict.__getitem__(self, tag)
+                data_elem = correct_ambiguous_vr_element(
+                    data_elem, self, raw_data_elem[6])
+            # Store the fully converted data element so permanently changed
+            self[tag] = data_elem
+        else:
+            data_elem = dict.__getitem__(self, tag)
+        
+        return data_elem
 
     def get_item(self, key):
         """Return the raw data element if possible.

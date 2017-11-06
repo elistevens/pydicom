@@ -111,6 +111,7 @@ if __name__ == "__main__":
     write_filenames = filenames1[:50]
     # print("Filenames:", write_filenames)
     datasets = [pydicom.dcmread(fn) for fn in write_filenames]
+    # convert_from_raw = [str(ds) for ds in datasets]
     ds_new_filenames = [os.path.join(tempwrite, os.path.basename(ds.filename))
                         for ds in datasets]
     

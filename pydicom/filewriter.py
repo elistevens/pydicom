@@ -360,13 +360,17 @@ def write_TM(fp, data_element, padding=' '):
         fp.write(val)
 
 
-def write_data_element(fp, data_element, encoding=default_encoding):
+def write_data_element(fp, data_element, dataset, is_little_endian,
+                       encoding=default_encoding):
     """Write the data_element to file fp according to dicom media storage rules.
     """
     # Write element's tag
     fp.write_tag(data_element.tag)
 
-    # If explicit VR, write the VR
+    # If explicit VR, write the VR  
+    if len(data_element.VR) != 2:
+        data_element = correct_ambiguous_vr_element(data_element, 
+                                                   dataset, is_little_endian)
     VR = data_element.VR
     if not fp.is_implicit_VR:
         if len(VR) != 2:
@@ -446,9 +450,6 @@ def write_dataset(fp, dataset, parent_encoding=default_encoding):
     Attempt to correct ambiguous VR elements when explicit little/big
       encoding Elements that can't be corrected will be returned unchanged.
     """
-    if not fp.is_implicit_VR:
-        dataset = correct_ambiguous_vr(dataset, fp.is_little_endian)
-
     dataset_encoding = dataset.get('SpecificCharacterSet', parent_encoding)
 
     fpStart = fp.tell()
@@ -459,7 +460,8 @@ def write_dataset(fp, dataset, parent_encoding=default_encoding):
         with tag_in_exception(tag):
             # write_data_element(fp, dataset.get_item(tag), dataset_encoding)
             # XXX for writing raw tags without converting to DataElement
-            write_data_element(fp, dataset[tag], dataset_encoding)
+            write_data_element(fp, dataset[tag], dataset, fp.is_little_endian,
+                               dataset_encoding)
 
     return fp.tell() - fpStart
 
@@ -635,7 +637,8 @@ def write_file_meta_info(fp, file_meta, enforce_standard=True):
         group_length = int(end_of_file_meta - end_group_length_elem)
         file_meta.FileMetaInformationGroupLength = group_length
         fp.seek(end_group_length_elem - 12)
-        write_data_element(fp, file_meta[0x00020000])
+        write_data_element(fp, file_meta[0x00020000], file_meta,
+                           fp.is_little_endian)
 
         # Return to end of the file meta, ready to write remainder of the file
         fp.seek(end_of_file_meta)
@@ -751,8 +754,9 @@ def dcmwrite(filename, dataset, write_like_original=True):
     """
     # Check that dataset's group 0x0002 elements are only present in the
     #   `dataset.file_meta` Dataset - user may have added them to the wrong
-    #   place
-    if dataset.group_dataset(0x0002) != Dataset():
+    #   place. Later will check for command set group 0.
+    has_group0, has_group2 = dataset.has_groups(0, 2)
+    if has_group2:
         raise ValueError("File Meta Information Group Elements (0002,eeee) "
                          "should be in their own Dataset object in the "
                          "'{0}.file_meta' "
@@ -819,8 +823,10 @@ def dcmwrite(filename, dataset, write_like_original=True):
         # Write any Command Set elements now as elements must be in tag order
         #   Mixing Command Set with other elements is non-conformant so we
         #   require `write_like_original` to be True
-        command_set = dataset[0x00000000:0x00010000]
-        if command_set and write_like_original:
+        
+        if has_group0 and write_like_original:
+            command_set = dataset[0x00000000:0x00010000]
+            dataset = dataset[0x00010000:]
             fp.is_implicit_VR = True
             fp.is_little_endian = True
             write_dataset(fp, command_set)
@@ -832,7 +838,7 @@ def dcmwrite(filename, dataset, write_like_original=True):
         fp.is_little_endian = dataset.is_little_endian
 
         # Write non-Command Set elements now
-        write_dataset(fp, dataset[0x00010000:])
+        write_dataset(fp, dataset)
     finally:
         if not caller_owns_file:
             fp.close()
