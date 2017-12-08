@@ -362,7 +362,10 @@ def read_dataset(fp, is_implicit_VR, is_little_endian, bytelength=None,
     except NotImplementedError as details:
         logger.error(details)
 
-    return Dataset(raw_data_elements)
+    ds = Dataset(raw_data_elements)
+    ds.is_little_endian = is_little_endian
+    ds.is_implicit_VR = is_implicit_VR
+    return ds
 
 
 def read_sequence(fp, is_implicit_VR, is_little_endian, bytelength, encoding,

@@ -248,7 +248,7 @@ class WriteDataElementTests(unittest.TestCase):
         with DicomBytesIO() as fp:
             fp.is_implicit_VR = is_implicit_VR
             fp.is_little_endian = is_little_endian
-            write_data_element(fp, elem)
+            write_data_element(fp, elem, None, None)
             return fp.parent.getvalue()
 
     def test_empty_AT(self):
@@ -259,7 +259,7 @@ class WriteDataElementTests(unittest.TestCase):
             " 28 00 09 00"  # (0028,0009) Frame Increment Pointer
             " 00 00 00 00"  # length 0
         ))
-        write_data_element(self.f1, data_elem)
+        write_data_element(self.f1, data_elem, None, None)
         got = self.f1.getvalue()
         msg = ("Did not write zero-length AT value correctly. "
                "Expected %r, got %r") % (bytes2hex(expected), bytes2hex(got))
@@ -1739,7 +1739,7 @@ class TestWriteUndefinedLengthPixelData(unittest.TestCase):
                                  b'\xfe\xff\x00\xe0'
                                  b'\x00\x01\x02\x03',
                                  is_undefined_length=True)
-        write_data_element(self.fp, pixel_data)
+        write_data_element(self.fp, pixel_data, None, None)
 
         expected = (b'\xe0\x7f\x10\x00'  # tag
                     b'OB\x00\x00'  # VR
@@ -1757,7 +1757,7 @@ class TestWriteUndefinedLengthPixelData(unittest.TestCase):
                                  b'\xff\xfe\xe0\x00'
                                  b'\x00\x01\x02\x03',
                                  is_undefined_length=True)
-        write_data_element(self.fp, pixel_data)
+        write_data_element(self.fp, pixel_data, None, None)
         expected = (b'\x7f\xe0\x00\x10'  # tag
                     b'OB\x00\x00'  # VR
                     b'\xff\xff\xff\xff'  # length
@@ -1777,7 +1777,7 @@ class TestWriteUndefinedLengthPixelData(unittest.TestCase):
                                  is_undefined_length=True)
         with pytest.raises(ValueError, match='Pixel Data .* must '
                                              'start with an item tag'):
-            write_data_element(self.fp, pixel_data)
+            write_data_element(self.fp, pixel_data, None, None)
 
     def test_big_endian_incorrect_data(self):
         """Writing pixel data not starting with an item tag raises."""
@@ -1790,7 +1790,7 @@ class TestWriteUndefinedLengthPixelData(unittest.TestCase):
                                  is_undefined_length=True)
         with pytest.raises(ValueError, match='Pixel Data .+ must '
                                              'start with an item tag'):
-            write_data_element(self.fp, pixel_data)
+            write_data_element(self.fp, pixel_data, None, None)
 
 
 if __name__ == "__main__":
