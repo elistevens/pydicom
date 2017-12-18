@@ -221,7 +221,17 @@ def data_element_generator(fp,
                              "Skipping forward to next data element.")
                 fp.seek(fp_tell() + length)
             else:
-                value = fp_read(length)
+                if tag == 0x7fe00010:  # PixelData
+                    # numpy can later be made from bytearray without copy
+                    value = bytearray(length)                   
+                    nbytes = fp.readinto(value)
+                    # If reading truncated, then truncate the pixel value also
+                    # test_filereader.testReadFileWithMissingPixelDataArray
+                    # checks that bytes read less than expected
+                    if nbytes != length:
+                        value = value[:nbytes]
+                else:
+                    value = fp_read(length)
                 if debugging:
                     dotdot = "   "
                     if length > 12:

@@ -87,7 +87,10 @@ class DicomIO(object):
                            len(bytes_read), length, start_pos))
                 raise EOFError(msg)
         return bytes_read
-
+    
+    def readinto(self, buffer):
+        self.parent_readinto(buffer)
+        
     def write_leUS(self, val):
         """Write an unsigned short with little endian byte order"""
         self.write(pack(b"<H", val))
@@ -147,6 +150,8 @@ class DicomFileLike(DicomIO):
     def __init__(self, file_like_obj):
         self.parent = file_like_obj
         self.parent_read = getattr(file_like_obj, "read", self.no_read)
+        self.parent_readinto = getattr(file_like_obj, "readinto", 
+                                       self.no_readinto)
         self.write = getattr(file_like_obj, "write", self.no_write)
         self.seek = getattr(file_like_obj, "seek", self.no_seek)
         self.tell = file_like_obj.tell
@@ -160,6 +165,10 @@ class DicomFileLike(DicomIO):
     def no_read(self, bytes_read):
         """Used for file-like objects where no read is available"""
         raise IOError("This DicomFileLike object has no read() method")
+
+    def no_readinto(self, buffer):
+        """Used for file-like objects where no readinto is available"""
+        raise IOError("This DicomFileLike object has no readinto() method")
 
     def no_seek(self, offset, from_what):
         """Used for file-like objects where no seek is available"""

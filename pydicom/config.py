@@ -64,6 +64,15 @@ data elements to datetime.date, datetime.datetime
 and datetime.time respectively. Default: False
 """
 
+pixel_array_makes_copy = False
+"""To mimic pydicom < 1.0 behavior, set this to True.
+Then pixel_array will always create a numpy array using a copy
+of the PixelData, rather than a view, even when a view is possible,
+as is the case for uncompressed pixel data.
+If True, then the user is responsible for updating PixelData before
+writing a dataset, if the pixel data is to be changed.
+"""
+
 # Logging system and debug function to change logging level
 logger = logging.getLogger('pydicom')
 handler = logging.StreamHandler()

@@ -226,6 +226,10 @@ class DataElement(object):
             else:
                 return Sequence(val)
 
+        # If a bytearray, then setting e.g. pixel data,
+        #   just return the value
+        if isinstance(val, bytearray):
+            return val
         # if the value is a list, convert each element
         try:
             val.append

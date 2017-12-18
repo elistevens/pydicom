@@ -556,6 +556,8 @@ class Dataset(dict):
             else:
                 character_set = default_encoding
             # Not converted from raw form read from file yet; do so now
+            if tag == 0x7fe00010:  # PixelData
+                pass  #  XXX
             self[tag] = DataElement_from_raw(data_elem, character_set)
 
             # If the Element has an ambiguous VR, try to correct it
