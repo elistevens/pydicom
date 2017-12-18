@@ -556,8 +556,6 @@ class Dataset(dict):
             else:
                 character_set = default_encoding
             # Not converted from raw form read from file yet; do so now
-            if tag == 0x7fe00010:  # PixelData
-                pass  #  XXX
             self[tag] = DataElement_from_raw(data_elem, character_set)
 
             # If the Element has an ambiguous VR, try to correct it
@@ -713,7 +711,8 @@ class Dataset(dict):
                     pixel_array = x.get_pixeldata(self)
                     self._pixel_array = self._reshape_pixel_array(pixel_array)
                     if x.needs_to_convert_to_RGB(self):
-                        self._pixel_array = self._convert_YBR_to_RGB(self._pixel_array)
+                        self._pixel_array = self._convert_YBR_to_RGB(
+                                            self._pixel_array)
                     successfully_read_pixel_data = True
                     break
                 except Exception as e:

@@ -107,9 +107,9 @@ def get_pixeldata(dicom_dataset):
         pixel_array = numpy.frombytes(pixel_bytearray, dtype=numpy_dtype)
     else:
         pixel_array = numpy.frombuffer(pixel_bytearray, dtype=numpy_dtype)
-    
+
     length_of_pixel_array = pixel_array.nbytes
-    
+
     expected_length = dicom_dataset.Rows * dicom_dataset.Columns
     if ('NumberOfFrames' in dicom_dataset and
             dicom_dataset.NumberOfFrames > 1):

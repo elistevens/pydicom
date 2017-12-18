@@ -87,10 +87,10 @@ class DicomIO(object):
                            len(bytes_read), length, start_pos))
                 raise EOFError(msg)
         return bytes_read
-    
+
     def readinto(self, buffer):
         self.parent_readinto(buffer)
-        
+
     def write_leUS(self, val):
         """Write an unsigned short with little endian byte order"""
         self.write(pack(b"<H", val))
@@ -150,7 +150,7 @@ class DicomFileLike(DicomIO):
     def __init__(self, file_like_obj):
         self.parent = file_like_obj
         self.parent_read = getattr(file_like_obj, "read", self.no_read)
-        self.parent_readinto = getattr(file_like_obj, "readinto", 
+        self.parent_readinto = getattr(file_like_obj, "readinto",
                                        self.no_readinto)
         self.write = getattr(file_like_obj, "write", self.no_write)
         self.seek = getattr(file_like_obj, "seek", self.no_seek)

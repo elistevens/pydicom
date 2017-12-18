@@ -223,7 +223,7 @@ def data_element_generator(fp,
             else:
                 if tag == 0x7fe00010:  # PixelData
                     # numpy can later be made from bytearray without copy
-                    value = bytearray(length)                   
+                    value = bytearray(length)
                     nbytes = fp.readinto(value)
                     # If reading truncated, then truncate the pixel value also
                     # test_filereader.testReadFileWithMissingPixelDataArray
